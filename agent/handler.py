@@ -17,18 +17,24 @@ async def dispatch(msg: dict[str, Any]) -> None:
 
     Args:
         msg: AgentHub에서 수신한 JSON 딕셔너리
-             예: {"action": "rename_chat", "sn": "000001",
-                    "phone": "010-XXXX-XXXX", "patient_name": "홍길동"}
+             예: {
+                   "action": "rename_chat",
+                   "sn": "000001",
+                   "phone": "010-XXXX-XXXX",
+                   "patient_name": "홍길동",
+                   "sender": "홍길동",
+                   "code": "123456"
+                 }
     """
     action = msg.get('action')
 
     if action == 'rename_chat':
+        sender       = msg.get('sender', '')
+        code         = msg.get('code', '')
         sn           = msg.get('sn', '')
         patient_name = msg.get('patient_name', '')
-        phone        = msg.get('phone', '')
-        new_name     = f'{sn} {patient_name}'  # 예: "000001 홍길동"
-        log.info(f'[rename_chat] {phone} → "{new_name}"')
-        await rename_chat(phone=phone, new_name=new_name)
+        log.info(f'[rename_chat] sender={sender}, code={code}, sn={sn}, patient_name={patient_name}')
+        await rename_chat(sender=sender, code=code, sn=sn, patient_name=patient_name)
 
     else:
         log.warning(f'Unknown action: {action!r}')

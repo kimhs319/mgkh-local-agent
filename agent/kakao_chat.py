@@ -1,76 +1,89 @@
 """
 agent/kakao_chat.py
 
-Playwright를 사용해 카카오톡 PC 브라우저에서
-칄카오연락치료실 쳄팅방 이름을 변경한다.
-
-시작 전 접속 URL 확인:
-    python -m playwright install chromium
+카카오비즈니스 채팅방 이름 변경.
+세션 파일(SESSION_PATH)을 로드해 Playwright headless 브라우저로 동작한다.
+최초 1회 로그인 후 세션을 저장해두면 이후 자동 재사용된다.
 """
 
 import logging
 import os
+from pathlib import Path
 
 from playwright.async_api import async_playwright
 
 log = logging.getLogger(__name__)
 
-KAKAO_URL = os.environ.get(
-    'KAKAO_URL',
-    'https://pc.kakao.com',  # 카카오톡 PC 브라우저 버전 URL
+SESSION_PATH = Path(os.environ.get('SESSION_PATH', 'output/session/kakao_state.json'))
+TARGET_URL   = 'https://business.kakao.com/_gxjkUT/chats'
+USER_AGENT   = (
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+    'AppleWebKit/537.36 (KHTML, like Gecko) '
+    'Chrome/131.0.0.0 Safari/537.36'
 )
 
 
-async def rename_chat(phone: str, new_name: str) -> None:
-    """쳄팅방 이름 변경.
+async def rename_chat(sender: str, code: str, sn: str, patient_name: str) -> None:
+    """카카오비즈니스 채팅방 이름 변경.
 
-    phone으로 쳄팅방을 검색한 후 다음 순서로 동작:
-    1. 검색 마늘에 phone 입력
-    2. 첫 번째 결과 우클릭 → ‘대화 이름 변경’ 메뉴
-    3. new_name 입력 후 확인
+    Args:
+        sender:       카카오 채팅방 별명 (탐색 keyword)
+        code:         OTP 인증번호 6자리 (탐색 number)
+        sn:           차트번호
+        patient_name: 환자 이름
     """
+    new_name = f'{sn} {patient_name}'
+
     async with async_playwright() as p:
-        # 현재 실행 중인 Chromium에 연결 (persistent context)
-        # 실제 환경에서는 connect_over_cdp 또는 launch_persistent_context 사용 권장
-        browser = await p.chromium.launch(headless=False)
-        context = await browser.new_context()
-        page    = await context.new_page()
-
+        browser = await p.chromium.launch(headless=True, slow_mo=500)
         try:
-            log.info(f'Navigating to {KAKAO_URL}')
-            await page.goto(KAKAO_URL)
+            context = await browser.new_context(
+                storage_state=str(SESSION_PATH),
+                user_agent=USER_AGENT,
+            )
+            page = await context.new_page()
 
-            # 채팅방 검색 입력
-            search_input = page.locator('input[placeholder*="검색"]').first
-            await search_input.fill(phone)
-            await page.wait_for_timeout(1000)
+            log.info('채팅 목록 페이지로 이동 중...')
+            await page.goto(TARGET_URL)
+            await page.wait_for_load_state('domcontentloaded')
+            await page.wait_for_timeout(3000)
 
-            # 첫 번째 결과 우클릭
-            first_result = page.locator('[class*="chatItem"], [class*="chat-item"]').first
-            await first_result.click(button='right')
-            await page.wait_for_timeout(300)
+            log.info(f'대화창 탐색 중... (sender: {sender}, code: {code})')
+            locator = (
+                page.locator('li')
+                .filter(has_text=sender)
+                .filter(has_text=code)
+            )
 
-            # 콘텐츠 메뉴에서 '대화 이름 변경' 선택
-            rename_menu = page.get_by_text('대화 이름 변경')
-            await rename_menu.click()
-            await page.wait_for_timeout(300)
+            count = await locator.count()
+            if count == 0:
+                log.error(f'대화창을 찾을 수 없습니다. (sender: {sender}, code: {code})')
+                return
+            if count > 1:
+                log.warning(f'대화창이 {count}개 탐색됩니다. 첫 번째 항목을 사용합니다.')
 
-            # 새 이름 입력
-            name_input = page.locator('input[type="text"]').last
-            await name_input.triple_click()  # 기존 텍스트 전체 선택
+            async with page.expect_popup() as popup_info:
+                await locator.first.click()
+            chat_page = await popup_info.value
+
+            await chat_page.wait_for_load_state('domcontentloaded')
+            await chat_page.wait_for_timeout(2000)
+            log.info('대화창 팝업 오픈 완료')
+
+            await chat_page.get_by_role('button', name='사이드 메뉴 열기').click()
+
+            name_input = chat_page.get_by_role('textbox', name='채팅방 이름 입력 메모 입력')
+            await name_input.click()
             await name_input.fill(new_name)
+            log.info(f'채팅방 이름 입력: {new_name}')
 
-            # 확인 버튼 클릭
-            confirm_btn = page.get_by_role('button', name='확인')
-            await confirm_btn.click()
-            await page.wait_for_timeout(500)
+            await chat_page.get_by_role('button', name='저장').first.click()
+            await chat_page.get_by_role('button', name='확인').click()
 
-            log.info(f'[rename_chat] Done: "{new_name}"')
+            log.info(f'채팅방 이름 변경 완료: {new_name}')
 
         except Exception as e:
-            log.error(f'[rename_chat] Failed: {e}', exc_info=True)
-            # 스크린샷 저장 (Playwright 디버깅 용)
-            await page.screenshot(path='rename_chat_error.png')
+            log.error(f'[rename_chat] 실패: {e}', exc_info=True)
             raise
 
         finally:
