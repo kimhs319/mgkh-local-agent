@@ -1,3 +1,7 @@
+# Wrangler
+.wrangler/
+wrangler-account.json
+
 # 환경변수
 .env
 
