@@ -1,0 +1,20 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Pull latest code
+        run: git pull origin main
+
+      - name: Restart agent task
+        run: |
+          schtasks /end /tn "mgkh-local-agent"
+          Start-Sleep -Seconds 2
+          schtasks /run /tn "mgkh-local-agent"
+        shell: powershell
