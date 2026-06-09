@@ -12,6 +12,10 @@ jobs:
       - name: Pull latest code
         run: git pull origin main
 
+      - name: Install dependencies
+        run: venv\Scripts\pip install -r requirements.txt
+        shell: cmd
+
       - name: Restart agent task
         run: |
           schtasks /end /tn "mgkh-local-agent"
