@@ -12,6 +12,8 @@ from pathlib import Path
 
 from playwright.async_api import async_playwright
 
+from agent.discord import send_error
+
 log = logging.getLogger(__name__)
 
 SESSION_PATH = Path(os.environ.get('SESSION_PATH', 'output/session/kakao_state.json'))
@@ -84,6 +86,7 @@ async def rename_chat(sender: str, code: str, sn: str, patient_name: str) -> Non
 
         except Exception as e:
             log.error(f'[rename_chat] 실패: {e}', exc_info=True)
+            await send_error('kakao_chat.rename_chat', e)
             raise
 
         finally:

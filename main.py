@@ -20,7 +20,8 @@ load_dotenv(Path(__file__).parent / '.env')
 
 import websockets  # noqa: E402
 
-from agent.handler import dispatch  # noqa: E402
+from agent.discord import send_error  # noqa: E402
+from agent.handler import dispatch    # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,
@@ -57,12 +58,15 @@ async def run() -> None:
                         log.warning(f'Non-JSON message: {raw!r}')
                     except Exception as e:
                         log.error(f'dispatch error: {e}', exc_info=True)
+                        await send_error('main.dispatch', e)
 
         except (websockets.ConnectionClosed, OSError) as e:
             log.warning(f'Connection lost: {e}. Reconnecting in {RECONNECT_DELAY}s...')
+            await send_error('main.websocket', e)
             await asyncio.sleep(RECONNECT_DELAY)
         except Exception as e:
             log.error(f'Unexpected error: {e}. Reconnecting in {RECONNECT_DELAY}s...')
+            await send_error('main.unexpected', e)
             await asyncio.sleep(RECONNECT_DELAY)
 
 
