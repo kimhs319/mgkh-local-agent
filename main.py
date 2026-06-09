@@ -53,7 +53,7 @@ async def run() -> None:
                     try:
                         msg = json.loads(raw)
                         log.info(f'Received: {msg}')
-                        await dispatch(msg)
+                        await dispatch(msg, ws)  # ws 객체 전달
                     except json.JSONDecodeError:
                         log.warning(f'Non-JSON message: {raw!r}')
                     except Exception as e:
