@@ -18,6 +18,7 @@ venv/
 env/
 
 # 세션 / 출력물
+session/
 output/
 logs/
 *.log
