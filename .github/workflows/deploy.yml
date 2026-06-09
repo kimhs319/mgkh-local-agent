@@ -19,6 +19,12 @@ jobs:
         run: venv\Scripts\pip install -r requirements.txt
         shell: cmd
 
+      - name: Install Playwright browsers
+        run: |
+          set PLAYWRIGHT_BROWSERS_PATH=C:\A\playwright
+          venv\Scripts\playwright install chromium
+        shell: cmd
+
       - name: Restart agent task
         run: |
           schtasks /end /tn "mgkh-local-agent"
