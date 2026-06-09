@@ -13,13 +13,14 @@ import signal
 import sys
 from pathlib import Path
 
-import websockets
 from dotenv import load_dotenv
 
-from agent.handler import dispatch
-
-# .env 로드 (LOCAL 개발 환경)
+# .env 로드는 다른 모듈 import 전에 실행해야 함
 load_dotenv(Path(__file__).parent / '.env')
+
+import websockets  # noqa: E402
+
+from agent.handler import dispatch  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,
@@ -28,8 +29,8 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-AGENT_HUB_URL   = os.environ['AGENT_HUB_URL']    # wss://mgkh-otp-worker.<account>.workers.dev/agent-ws
-AGENT_SECRET    = os.environ['AGENT_SECRET']      # wrangler secret put AGENT_SECRET 와 동일
+AGENT_HUB_URL   = os.environ['AGENT_HUB_URL']
+AGENT_SECRET    = os.environ['AGENT_SECRET']
 
 RECONNECT_DELAY = 5   # 재접속 대기 시간(초)
 PING_INTERVAL   = 30  # keep-alive ping 주기(초)
