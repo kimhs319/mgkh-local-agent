@@ -8,6 +8,9 @@ on:
 jobs:
   deploy:
     runs-on: self-hosted
+    defaults:
+      run:
+        working-directory: C:\A\mgkh-local-agent
     steps:
       - name: Pull latest code
         run: git pull origin main
