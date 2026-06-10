@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>진료비(약제비) 납입 확인서</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Noto Sans KR', sans-serif; font-size: 9pt; color: #000; background: #fff; }
+    .page { width: 210mm; min-height: 297mm; padding: 15mm 15mm 10mm 15mm; margin: 0 auto; background: #fff; }
+    .regulation { font-size: 7.5pt; margin-bottom: 10mm; line-height: 1.5; }
+    .title { text-align: center; font-size: 16pt; font-weight: 700; margin-bottom: 6mm; letter-spacing: -0.5px; }
+    table { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+    td, th { border: 1px solid #000; padding: 2px 4px; vertical-align: middle; line-height: 1.4; }
+    .cell-label { background-color: #f5f5f5; font-weight: 500; text-align: center; white-space: nowrap; }
+    .cell-value { text-align: center; }
+    .cell-amount { text-align: right; padding-right: 6px; }
+    .col-header { background-color: #f5f5f5; text-align: center; font-size: 7.5pt; font-weight: 500; }
+    .data-row td { height: 28px; }
+    .sum-row td { background-color: #f5f5f5; font-weight: 700; height: 22px; }
+    .facility-table td { height: 22px; }
+    .date-row { text-align: center; padding: 5mm 0 4mm 0; font-size: 9pt; }
+    .footer-note { font-size: 7.5pt; line-height: 1.7; margin-top: 4mm; padding: 3mm 2mm; border: 1px solid #000; }
+    .footer-note p { margin-bottom: 2mm; text-indent: -10px; padding-left: 10px; }
+    .footer-note p:last-child { margin-bottom: 0; }
+    .footer-link { margin-top: 3mm; font-size: 7.5pt; padding: 2mm; border: 1px solid #000; }
+    .paper-size { text-align: right; font-size: 7pt; margin-top: 3mm; color: #333; }
+    .center { text-align: center; }
+    .bold { font-weight: 700; }
+    .empty-row td { height: 28px; }
+  </style>
+</head>
+<body>
+<div class="page">
+  <div class="regulation">■ 국민건강보험 요양급여의 기준에 관한 규칙 [별지 제12호의2서식] &lt;개정 2014.9.1.&gt;</div>
+  <div class="title">진료비(약제비) 납입 확인서</div>
+
+  <table>
+    <colgroup>
+      <col style="width:14%">
+      <col style="width:9%">
+      <col style="width:11%">
+      <col style="width:10%">
+      <col style="width:10%">
+      <col style="width:10%">
+      <col style="width:10%">
+      <col style="width:9%">
+      <col style="width:9%">
+      <col style="width:8%">
+    </colgroup>
+
+    <!-- 환자 정보 행 -->
+    <tr>
+      <td class="cell-label" style="height:26px">환자 성명</td>
+      <td class="cell-value" colspan="4">{{ patient_name }}</td>
+      <td class="cell-label" style="text-align:center">주민등록번호</td>
+      <td class="cell-value" colspan="4">{{ resident_number }}</td>
+    </tr>
+
+    <!-- 헤더 행 1 -->
+    <tr>
+      <td class="col-header" rowspan="3" style="vertical-align:middle; height:28px">진료·조제일자<br>(진료기간)</td>
+      <td class="col-header" rowspan="3" style="vertical-align:middle">구분<br>(입원,<br>외래)</td>
+      <td class="col-header" rowspan="3" style="vertical-align:middle">총액<br>(①+②+③)</td>
+      <td class="col-header" colspan="3" style="height:22px">진료비(약제비) 내역</td>
+      <td class="col-header" rowspan="3" style="vertical-align:middle">환자<br>부담총액<br>(②+③)</td>
+      <td class="col-header" colspan="3">소득공제 대상액</td>
+    </tr>
+    <!-- 헤더 행 2 -->
+    <tr>
+      <td class="col-header" colspan="2" style="height:22px">급여</td>
+      <td class="col-header" rowspan="2" style="vertical-align:middle">비급여<br>③<br>환자부담액</td>
+      <td class="col-header" rowspan="2" style="vertical-align:middle">카드</td>
+      <td class="col-header" rowspan="2" style="vertical-align:middle">현금<br>영수증</td>
+      <td class="col-header" rowspan="2" style="vertical-align:middle">현금</td>
+    </tr>
+    <!-- 헤더 행 3 -->
+    <tr>
+      <td class="col-header" style="height:30px; vertical-align:middle">①<br>공단<br>부담액</td>
+      <td class="col-header" style="vertical-align:middle">②<br>환자<br>부담액</td>
+    </tr>
+
+    <!-- 데이터 행 -->
+    {% for row in records %}
+    <tr class="data-row">
+      <td class="center">{{ row.date }}</td>
+      <td class="center">{{ row.type }}</td>
+      <td class="cell-amount">{{ row.total }}</td>
+      <td class="cell-amount">{{ row.copay_public }}</td>
+      <td class="cell-amount">{{ row.copay_patient_insured }}</td>
+      <td class="cell-amount">{{ row.copay_patient_uninsured }}</td>
+      <td class="cell-amount">{{ row.patient_total }}</td>
+      <td class="cell-amount">{{ row.card }}</td>
+      <td class="cell-amount">{{ row.cash_receipt }}</td>
+      <td class="cell-amount">{{ row.cash }}</td>
+    </tr>
+    {% endfor %}
+
+    <!-- 빈 여백 행 -->
+    {% for _ in empty_rows %}
+    <tr class="empty-row">
+      <td></td><td></td><td></td><td></td><td></td>
+      <td></td><td></td><td></td><td></td><td></td>
+    </tr>
+    {% endfor %}
+
+    <!-- 계 행 -->
+    <tr class="sum-row">
+      <td class="bold" colspan="2" style="text-align:left; padding-left:8px">계</td>
+      <td class="cell-amount bold">{{ sum_total }}</td>
+      <td class="cell-amount bold">{{ sum_copay_public }}</td>
+      <td class="cell-amount bold">{{ sum_copay_patient_insured }}</td>
+      <td class="cell-amount bold">{{ sum_copay_patient_uninsured }}</td>
+      <td class="cell-amount bold">{{ sum_patient_total }}</td>
+      <td class="cell-amount bold">{{ sum_card }}</td>
+      <td class="cell-amount bold">{{ sum_cash_receipt }}</td>
+      <td class="cell-amount bold">{{ sum_copay_cash }}</td>
+    </tr>
+
+    <!-- 소득공제 대상액 총계 -->
+    <tr>
+      <td class="cell-label" colspan="2" style="text-align:center; height:24px">소득공제 대상액 총계</td>
+      <td colspan="8">{{ income_deduction_total }}</td>
+    </tr>
+  </table>
+
+  <!-- 요양기관 정보 -->
+  <table class="facility-table" style="margin-top:-1px">
+    <tr>
+      <td class="cell-label" style="width:18%;text-align:center">요양기관 종류</td>
+      <td style="width:82%">
+        {% if facility_type == "clinic" %}[■]{% else %}[ ]{% endif %} 의원급·보건기관 &nbsp;&nbsp;&nbsp;
+        {% if facility_type == "hospital" %}[■]{% else %}[ ]{% endif %} 병원급 &nbsp;&nbsp;&nbsp;
+        {% if facility_type == "general" %}[■]{% else %}[ ]{% endif %} 종합병원<br>
+        {% if facility_type == "advanced" %}[■]{% else %}[ ]{% endif %} 상급종합병원 &nbsp;&nbsp;&nbsp;
+        {% if facility_type == "pharmacy" %}[■]{% else %}[ ]{% endif %} 약국·한국희귀의약품센터
+      </td>
+    </tr>
+    <tr>
+      <td class="cell-label" style="text-align:center">사업자등록번호</td>
+      <td>
+        <table style="border:none;width:100%">
+          <tr>
+            <td style="border:none;width:35%;padding:0 4px">{{ biz_number }}</td>
+            <td style="border:none;width:8%;padding:0;text-align:center;font-weight:500">상호</td>
+            <td style="border:none;width:27%;padding:0 4px">{{ company_name }}</td>
+            <td style="border:none;width:12%;padding:0;text-align:center;font-weight:500">전화번호</td>
+            <td style="border:none;width:18%;padding:0 4px">{{ phone }}</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td class="cell-label" style="text-align:center">사업장 소재지</td>
+      <td>
+        <table style="border:none;width:100%">
+          <tr>
+            <td style="border:none;width:65%;padding:0 4px">{{ address }}</td>
+            <td style="border:none;width:10%;padding:0;text-align:center;font-weight:500">대표자</td>
+            <td style="border:none;width:20%;padding:0 4px">{{ representative }}</td>
+            <td style="border:none;width:5%;padding:0;text-align:center">[인]</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  <!-- 날짜 -->
+  <div class="date-row">{{ year }} 년 &nbsp; {{ month }} 월 &nbsp; {{ day }} 일</div>
+
+  <!-- 하단 안내문 -->
+  <div class="footer-note">
+    <p>※ 「국민건강보험법」 제48조 또는 「의료급여법」 제11조의3에 따라 환자가 전액 부담한 비용과 비급여로 부담한 비용의 타당성 여부를 건강보험심사평가원(☎1644-2000, 홈페이지: www.hira.or.kr)에 확인 요청하실 수 있습니다.</p>
+    <p>※ 이 납입확인서는 「소득세법」에 따른 의료비 공제신청에 사용할 수 있습니다. 다만,「소득세법 시행령」 제110조제2항에 따라 환자부담액 중 2009년 12월 31일까지 지출한 미용·성형수술을 위한 비용 및 건강증진을 위한 의약품 구입비용은 소득공제 대상액에 포함됩니다.</p>
+  </div>
+  <div class="footer-link">알림 : 현금영수증 문의 126 &nbsp; 인터넷 홈페이지: http://현금영수증.kr</div>
+  <div class="paper-size">210㎜×297㎜[백상지 70g/㎡(재활용품)]</div>
+</div>
+</body>
+</html>
