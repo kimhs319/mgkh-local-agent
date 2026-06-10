@@ -1,0 +1,125 @@
+{
+  "name": "pdf2",
+  "title": "진료비(약제비) 납입 확인서",
+  "regulation": "■ 국민건강보험 요양급여의 기준에 관한 규칙 [별지 제12호의2서식] &lt;개정 2015.5.29&gt;",
+  "dataKey": "records",
+
+  "tables": [
+
+    {
+      "id": "main",
+      "totalCols": 11,
+      "colWidths": ["12%", "7%", "9%", "8%", "8%", "8%", "8%", "8%", "9%", "7%", "8%"],
+
+      "cells": [
+
+        { "type": "label",  "row": 0, "col": 0, "rowspan": 1, "colspan": 1,  "text": "환자 성명" },
+        { "type": "value",  "row": 0, "col": 1, "rowspan": 1, "colspan": 4,  "dataKey": "patient_name",    "align": "center" },
+        { "type": "label",  "row": 0, "col": 5, "rowspan": 1, "colspan": 3,  "text": "주민등록번호" },
+        { "type": "value",  "row": 0, "col": 8, "rowspan": 1, "colspan": 3,  "dataKey": "resident_number", "align": "center" },
+
+        { "type": "header", "row": 1, "col": 0,  "rowspan": 4, "colspan": 1, "text": "진료 ·\n조제일자\n(진료기간)" },
+        { "type": "header", "row": 1, "col": 1,  "rowspan": 4, "colspan": 1, "text": "구분\n(입원,\n외래)" },
+        { "type": "header", "row": 1, "col": 2,  "rowspan": 1, "colspan": 6, "text": "진료비(약제비) 내역" },
+        { "type": "header", "row": 1, "col": 8,  "rowspan": 1, "colspan": 3, "text": "소득공제 대상액" },
+
+        { "type": "header", "row": 2, "col": 2,  "rowspan": 3, "colspan": 1, "text": "총액\n(①+②+③+④)" },
+        { "type": "header", "row": 2, "col": 3,  "rowspan": 1, "colspan": 3, "text": "급여" },
+        { "type": "header", "row": 2, "col": 6,  "rowspan": 1, "colspan": 1, "text": "비급여" },
+        { "type": "header", "row": 2, "col": 7,  "rowspan": 3, "colspan": 1, "text": "환자\n부담총액\n(②+③+④)" },
+        { "type": "header", "row": 2, "col": 8,  "rowspan": 3, "colspan": 1, "text": "카드" },
+        { "type": "header", "row": 2, "col": 9,  "rowspan": 3, "colspan": 1, "text": "현금\n영수증" },
+        { "type": "header", "row": 2, "col": 10, "rowspan": 3, "colspan": 1, "text": "현금" },
+
+        { "type": "header", "row": 3, "col": 3,  "rowspan": 1, "colspan": 2, "text": "일부 본인부담" },
+        { "type": "header", "row": 3, "col": 5,  "rowspan": 2, "colspan": 1, "text": "③\n전액\n본인\n부담" },
+        { "type": "header", "row": 3, "col": 6,  "rowspan": 2, "colspan": 1, "text": "④\n본인\n부담금" },
+
+        { "type": "header", "row": 4, "col": 3,  "rowspan": 1, "colspan": 1, "text": "①공단\n부담금" },
+        { "type": "header", "row": 4, "col": 4,  "rowspan": 1, "colspan": 1, "text": "②본인\n부담금" },
+
+        { "type": "label",  "row": 30, "col": 0, "rowspan": 1, "colspan": 1,  "text": "계",              "align": "center" },
+        { "type": "label",  "row": 30, "col": 1, "rowspan": 1, "colspan": 1,  "text": ""},
+        { "type": "sum",    "row": 30, "col": 2, "rowspan": 1, "colspan": 1,  "dataKey": "sum_total",                     "align": "right" },
+        { "type": "sum",    "row": 30, "col": 3, "rowspan": 1, "colspan": 1,  "dataKey": "sum_copay_public",              "align": "right" },
+        { "type": "sum",    "row": 30, "col": 4, "rowspan": 1, "colspan": 1,  "dataKey": "sum_copay_patient_insured",     "align": "right" },
+        { "type": "sum",    "row": 30, "col": 5, "rowspan": 1, "colspan": 1,  "dataKey": "sum_copay_patient_uninsured",   "align": "right" },
+        { "type": "sum",    "row": 30, "col": 6, "rowspan": 1, "colspan": 1,  "dataKey": "sum_copay_patient_uninsured_b", "align": "right" },
+        { "type": "sum",    "row": 30, "col": 7, "rowspan": 1, "colspan": 1,  "dataKey": "sum_copay_cash",                "align": "right" },
+        { "type": "sum",    "row": 30, "col": 8, "rowspan": 1, "colspan": 1,  "dataKey": "sum_patient_total",             "align": "right" },
+        { "type": "sum",    "row": 30, "col": 9, "rowspan": 1, "colspan": 1,  "dataKey": "sum_card",                      "align": "right" },
+        { "type": "sum",    "row": 30, "col": 10,"rowspan": 1, "colspan": 1,  "dataKey": "sum_cash_receipt",              "align": "right" },
+
+        { "type": "label",  "row": 31, "col": 0, "rowspan": 1, "colspan": 8,  "text": "소득공제 대상액 총계", "align": "center" },
+        { "type": "sum",    "row": 31, "col": 8, "rowspan": 1, "colspan": 3,  "dataKey": "income_deduction_total",        "align": "right" }
+      ],
+
+      "dataRowTemplate": {
+        "startRow": 5,
+        "count": 25,
+        "cols": [
+          { "col": 0,  "dataKey": "date",                     "align": "center" },
+          { "col": 1,  "dataKey": "type",                     "align": "center" },
+          { "col": 2,  "dataKey": "total",                    "align": "right"  },
+          { "col": 3,  "dataKey": "copay_public",             "align": "right"  },
+          { "col": 4,  "dataKey": "copay_patient_insured",    "align": "right"  },
+          { "col": 5,  "dataKey": "copay_patient_uninsured",  "align": "right"  },
+          { "col": 6,  "dataKey": "copay_patient_uninsured_b","align": "right"  },
+          { "col": 7,  "dataKey": "copay_cash",               "align": "right"  },
+          { "col": 8,  "dataKey": "patient_total",            "align": "right"  },
+          { "col": 9,  "dataKey": "card",                     "align": "right"  },
+          { "col": 10, "dataKey": "cash_receipt",             "align": "right"  }
+        ]
+      }
+    },
+
+    {
+      "id": "facility",
+      "totalCols": 6,
+      "colWidths": ["18%", "22%", "12%", "18%", "12%", "18%"],
+
+      "cells": [
+        { "type": "label", "row": 0, "col": 0, "rowspan": 1, "colspan": 1, "text": "요양기관 종류" },
+        { "type": "facility", "row": 0, "col": 1, "rowspan": 1, "colspan": 5,
+          "dataKey": "facility_type",
+          "options": [
+            { "value": "clinic",   "label": "의원급·보건기관" },
+            { "value": "hospital", "label": "병원급" },
+            { "value": "general",  "label": "종합병원" },
+            { "value": "advanced", "label": "상급종합병원" },
+            { "value": "pharmacy", "label": "약국·한국희귀의약품센터" }
+          ],
+          "layout": [["clinic", "hospital", "general"], ["advanced", "pharmacy"]]
+        },
+
+        { "type": "label", "row": 1, "col": 0, "rowspan": 1, "colspan": 1, "text": "사업자등록번호" },
+        { "type": "value", "row": 1, "col": 1, "rowspan": 1, "colspan": 1, "dataKey": "biz_number",   "align": "left" },
+        { "type": "label", "row": 1, "col": 2, "rowspan": 1, "colspan": 1, "text": "상호" },
+        { "type": "value", "row": 1, "col": 3, "rowspan": 1, "colspan": 1, "dataKey": "company_name", "align": "left" },
+        { "type": "label", "row": 1, "col": 4, "rowspan": 1, "colspan": 1, "text": "전화번호" },
+        { "type": "value", "row": 1, "col": 5, "rowspan": 1, "colspan": 1, "dataKey": "phone",        "align": "left" },
+
+        { "type": "label", "row": 2, "col": 0, "rowspan": 1, "colspan": 1, "text": "사업장 소재지" },
+        { "type": "value", "row": 2, "col": 1, "rowspan": 1, "colspan": 3, "dataKey": "address",        "align": "left" },
+        { "type": "label", "row": 2, "col": 4, "rowspan": 1, "colspan": 1, "text": "대표자" },
+        { "type": "value", "row": 2, "col": 5, "rowspan": 1, "colspan": 1, "dataKey": "representative", "align": "center", "suffix": "[인]" }
+      ]
+    },
+
+    {
+      "id": "footer",
+      "totalCols": 1,
+      "colWidths": ["100%"],
+
+      "cells": [
+        { "type": "date",  "row": 0, "col": 0, "rowspan": 1, "colspan": 1,
+          "yearKey": "year", "monthKey": "month", "dayKey": "day", "align": "center" },
+        { "type": "note",  "row": 1, "col": 0, "rowspan": 1, "colspan": 1,
+          "text": "※ 「국민건강보험법」 제48조 또는 「의료급여법」 제11조의3에 따라 환자가 전액 부담한 비용과 비급여로 부담한 비용의 타당성 여부를 건강보험심사평가원(☎1644-2000, 홈페이지: www.hira.or.kr)에 확인 요청하실 수 있습니다.\n※ 이 납입확인서는 「소득세법」에 따른 의료비 공제신청에 사용할 수 있습니다." },
+        { "type": "note",  "row": 2, "col": 0, "rowspan": 1, "colspan": 1,
+          "text": "알림 : 현금영수증 문의 126   인터넷 홈페이지: http://현금영수증.kr" }
+      ]
+    }
+
+  ]
+}
