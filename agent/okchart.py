@@ -3,10 +3,12 @@ agent/okchart.py
 
 mgkh-okchart-api (localhost:8000) 호출 모듈.
 
-- POST /validate/patient  : 환자 본인 확인
+- POST /validate/patient      : 환자 본인 확인
+- GET  /patient/{sn}/demography : 환자 인구통계 정보 (birth, sex)
+- GET  /receipt/{sn}          : 환자 날짜 범위 계산서
 - 토큰 만료(401) 시 APP_PASSWORD로 자동 재발급 후 1회 재시도
 - 토큰은 session/okchart_token.json 에 저장 (재시작 후에도 유지)
-- 생년월일(birth)은 이 모듈 내에서만 사용하고 반환값에 포함하지 않음
+- 생년월일(birth)은 validate_patient 에서만 사용하고 반환값에 포함하지 않음
 """
 
 import json
@@ -54,6 +56,28 @@ async def _issue_token(client: httpx.AsyncClient) -> str:
     return token
 
 
+async def _get_with_retry(path: str) -> dict[str, Any]:
+    """GET 요청. 401 시 토큰 재발급 후 1회 재시도."""
+    token = _load_token()
+
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(
+            f'{OKCHART_API_URL}{path}',
+            headers={'Authorization': f'Bearer {token}'},
+            timeout=15,
+        )
+        if resp.status_code == 401:
+            log.info('[okchart] 토큰 만료, 재발급 시도')
+            token = await _issue_token(client)
+            resp = await client.get(
+                f'{OKCHART_API_URL}{path}',
+                headers={'Authorization': f'Bearer {token}'},
+                timeout=15,
+            )
+        resp.raise_for_status()
+        return resp.json()
+
+
 async def validate_patient(
     name: str,
     birth: str,
@@ -76,10 +100,8 @@ async def validate_patient(
     token = _load_token()
 
     async with httpx.AsyncClient() as client:
-        # 1회 시도
         result = await _call_validate(client, token, name, birth, phone)
 
-        # 401 → 토큰 재발급 후 재시도
         if result is None:
             log.info('[okchart] 토큰 만료, 재발급 시도')
             token = await _issue_token(client)
@@ -88,7 +110,6 @@ async def validate_patient(
         if result is None:
             raise RuntimeError('okchart-api 인증 실패 (재발급 후에도 401)')
 
-    # 생년월일은 반환값에 포함하지 않음
     return result
 
 
@@ -99,7 +120,7 @@ async def _call_validate(
     birth: str,
     phone: str,
 ) -> dict[str, Any] | None:
-    """실제 API 호출. 401이면 None 반환, 그 외 오류는 raise."""
+    """실제 validate API 호출. 401이면 None 반환, 그 외 오류는 raise."""
     resp = await client.post(
         f'{OKCHART_API_URL}/validate/patient',
         json={'name': name, 'birth': birth, 'phone': phone},
@@ -121,3 +142,38 @@ async def _call_validate(
             'phone':        data['phone'],
         }
     return {'matched': False}
+
+
+async def get_demography(sn: str) -> dict[str, Any]:
+    """환자 인구통계 정보 조회.
+
+    Args:
+        sn: 차트번호
+
+    Returns:
+        {'sn': str, 'birth': 'YYYY-MM-DD', 'sex': 0|1}
+        sex: 1 = 남자, 0 = 여자
+
+    Raises:
+        httpx.HTTPStatusError: 404(환자 없음) 또는 서버 오류
+    """
+    return await _get_with_retry(f'/patient/{sn}/demography')
+
+
+async def get_receipt(sn: str, date_from: str, date_to: str) -> dict[str, Any]:
+    """환자 날짜 범위 계산서 조회.
+
+    Args:
+        sn:        차트번호
+        date_from: 조회 시작일 (YYYY-MM-DD)
+        date_to:   조회 종료일 (YYYY-MM-DD)
+
+    Returns:
+        {'sn': str, 'date_from': str, 'date_to': str, 'count': int, 'data': [...]}
+
+    Raises:
+        httpx.HTTPStatusError: 404(계산서 없음) 또는 서버 오류
+    """
+    return await _get_with_retry(
+        f'/receipt/{sn}?date_from={date_from}&date_to={date_to}'
+    )
