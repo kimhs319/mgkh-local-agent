@@ -37,7 +37,7 @@ async def rename_chat(sender: str, code: str, sn: str, patient_name: str) -> Non
     new_name = f'{sn} {patient_name}'
 
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True, slow_mo=500)
+        browser = await p.chromium.launch(headless=True)
         try:
             context = await browser.new_context(
                 storage_state=str(SESSION_PATH),
@@ -45,18 +45,26 @@ async def rename_chat(sender: str, code: str, sn: str, patient_name: str) -> Non
             )
             page = await context.new_page()
 
+            # ── 1. 채팅 목록 페이지 이동 ──────────────────
             log.info('채팅 목록 페이지로 이동 중...')
             await page.goto(TARGET_URL)
             await page.wait_for_load_state('domcontentloaded')
 
+            # ── 2. 계정 선택 버튼 (뜨는 경우만) ──────────
             btn = page.get_by_role('button', name='mgkhclinic1@gmail.com 직원용')
             if await btn.count() > 0:
                 log.info('계정 선택 버튼 감지, 클릭')
-                await btn.click()
-                await page.wait_for_url('**/chats**')
+                try:
+                    await btn.click()
+                    await page.wait_for_url('**/chats**')
+                except Exception as e:
+                    log.error(f'계정 선택 버튼 클릭 실패: {e}')
+                    await send_error('kakao_chat.account_select', e)
+                    raise
             else:
                 await page.wait_for_timeout(3000)
-            
+
+            # ── 3. 대화창 탐색 ────────────────────────────
             log.info(f'대화창 탐색 중... (sender: {sender}, code: {code})')
             locator = (
                 page.locator('li')
@@ -66,34 +74,50 @@ async def rename_chat(sender: str, code: str, sn: str, patient_name: str) -> Non
 
             count = await locator.count()
             if count == 0:
-                log.error(f'대화창을 찾을 수 없습니다. (sender: {sender}, code: {code})')
+                msg = f'대화창을 찾을 수 없습니다. (sender: {sender}, code: {code})'
+                log.error(msg)
+                await send_error('kakao_chat.find_chat', RuntimeError(msg))
                 return
             if count > 1:
                 log.warning(f'대화창이 {count}개 탐색됩니다. 첫 번째 항목을 사용합니다.')
 
-            async with page.expect_popup() as popup_info:
-                await locator.first.click()
-            chat_page = await popup_info.value
+            # ── 4. 팝업 오픈 ──────────────────────────────
+            try:
+                async with page.expect_popup() as popup_info:
+                    await locator.first.click()
+                chat_page = await popup_info.value
+            except Exception as e:
+                log.error(f'대화창 팝업 오픈 실패: {e}')
+                await send_error('kakao_chat.open_popup', e)
+                raise
 
             await chat_page.wait_for_load_state('domcontentloaded')
             await chat_page.wait_for_timeout(2000)
             log.info('대화창 팝업 오픈 완료')
 
-            await chat_page.get_by_role('button', name='사이드 메뉴 열기').click()
+            # ── 5. 채팅방 이름 변경 ───────────────────────
+            try:
+                await chat_page.get_by_role('button', name='사이드 메뉴 열기').click()
 
-            name_input = chat_page.get_by_role('textbox', name='채팅방 이름 입력 메모 입력')
-            await name_input.click()
-            await name_input.fill(new_name)
-            log.info(f'채팅방 이름 입력: {new_name}')
+                name_input = chat_page.get_by_role('textbox', name='채팅방 이름 입력 메모 입력')
+                await name_input.click()
+                await name_input.fill(new_name)
+                log.info(f'채팅방 이름 입력: {new_name}')
 
-            await chat_page.get_by_role('button', name='저장').first.click()
-            await chat_page.get_by_role('button', name='확인').click()
+                await chat_page.get_by_role('button', name='저장').first.click()
+                await chat_page.get_by_role('button', name='확인').click()
+            except Exception as e:
+                log.error(f'채팅방 이름 변경 실패: {e}')
+                await send_error('kakao_chat.rename', e)
+                raise
 
             log.info(f'채팅방 이름 변경 완료: {new_name}')
 
         except Exception as e:
             log.error(f'[rename_chat] 실패: {e}', exc_info=True)
-            await send_error('kakao_chat.rename_chat', e)
+            # 단계별 send_error 에서 이미 처리된 경우 중복 전송 방지
+            if not hasattr(e, '_discord_sent'):
+                await send_error('kakao_chat.rename_chat', e)
             raise
 
         finally:
