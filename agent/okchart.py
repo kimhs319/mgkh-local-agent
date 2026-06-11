@@ -6,7 +6,7 @@ mgkh-okchart-api (localhost:8000) 호출 모듈.
 - POST /validate/patient      : 환자 본인 확인
 - GET  /patient/{sn}/demography : 환자 인구통계 정보 (birth, sex)
 - GET  /receipt/{sn}          : 환자 날짜 범위 계산서
-- 토큰 만료(401) 시 APP_PASSWORD로 자동 재발급 후 1회 재시도
+- 토큰 없음 또는 만료(401) 시 APP_PASSWORD로 자동 재발급 후 1회 재시도
 - 토큰은 session/okchart_token.json 에 저장 (재시작 후에도 유지)
 - 생년월일(birth)은 validate_patient 에서만 사용하고 반환값에 포함하지 않음
 """
@@ -57,10 +57,14 @@ async def _issue_token(client: httpx.AsyncClient) -> str:
 
 
 async def _get_with_retry(path: str) -> dict[str, Any]:
-    """GET 요청. 401 시 토큰 재발급 후 1회 재시도."""
+    """GET 요청. 토큰 없음 또는 401 시 토큰 재발급 후 1회 재시도."""
     token = _load_token()
 
     async with httpx.AsyncClient() as client:
+        if not token:
+            log.info('[okchart] 저장된 토큰 없음, 신규 발급')
+            token = await _issue_token(client)
+
         resp = await client.get(
             f'{OKCHART_API_URL}{path}',
             headers={'Authorization': f'Bearer {token}'},
@@ -100,6 +104,10 @@ async def validate_patient(
     token = _load_token()
 
     async with httpx.AsyncClient() as client:
+        if not token:
+            log.info('[okchart] 저장된 토큰 없음, 신규 발급')
+            token = await _issue_token(client)
+
         result = await _call_validate(client, token, name, birth, phone)
 
         if result is None:
