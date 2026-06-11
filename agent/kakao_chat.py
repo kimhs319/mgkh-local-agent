@@ -48,8 +48,15 @@ async def rename_chat(sender: str, code: str, sn: str, patient_name: str) -> Non
             log.info('채팅 목록 페이지로 이동 중...')
             await page.goto(TARGET_URL)
             await page.wait_for_load_state('domcontentloaded')
-            await page.wait_for_timeout(3000)
 
+            btn = page.get_by_role('button', name='mgkhclinic1@gmail.com 직원용')
+            if await btn.count() > 0:
+                log.info('계정 선택 버튼 감지, 클릭')
+                await btn.click()
+                await page.wait_for_url('**/chats**')
+            else:
+                await page.wait_for_timeout(3000)
+            
             log.info(f'대화창 탐색 중... (sender: {sender}, code: {code})')
             locator = (
                 page.locator('li')
