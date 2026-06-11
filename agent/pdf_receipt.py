@@ -87,7 +87,7 @@ def _build_context(receipt_data: list[dict], demo: dict) -> dict:
         copay_uninsured_b = int(r.get("비급여총액",   0) or 0)
         patient_total     = int(r.get("환자부담총액", 0) or 0)
         # ②본인부담(급여) = 환자부담총액 - 전액본인부담 - 비급여총액
-        copay_insured     = patient_total - copay_uninsured - copay_uninsured_b
+        copay_insured = int(r.get("본인부담금", 0) or 0)
         # col7 copay_cash = 환자부담총액(②+③+④)
         copay_cash        = patient_total
         card              = int(r.get("납부카드",       0) or 0)
