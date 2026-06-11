@@ -33,3 +33,6 @@ rename_chat_error.png
 # OS
 .DS_Store
 Thumbs.db
+
+# 테스트 스크립트
+test_*.py
