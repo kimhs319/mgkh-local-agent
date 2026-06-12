@@ -27,7 +27,7 @@ log = logging.getLogger(__name__)
 
 # ── 기관 정보 (하드코딩) ─────────────────────────────────────
 _FACILITY = {
-    "facility_type":  "한의원",
+    "facility_type":  "clinic",
     "biz_number":     "233-16-02991",
     "company_name":   "마곡경희한의원",
     "phone":          "02-3664-8075",
