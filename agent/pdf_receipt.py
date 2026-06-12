@@ -31,7 +31,7 @@ _FACILITY = {
     "biz_number":     "233-16-02991",
     "company_name":   "마곡경희한의원",
     "phone":          "02-3664-8075",
-    "address":        "서울시 강서구 강서로 385 307호",
+    "address":        "서울시 강서구 강서로 385 우성에스비타워 307호",
     "representative": "김희수",
 }
 
