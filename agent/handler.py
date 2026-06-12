@@ -5,7 +5,11 @@ AgentHub로부터 수신한 메시지를 action별로 라우팅한다.
 
 액션 목록:
     validate_patient       : 환자 본인 확인 후 validate_result 응답
-    check_and_send_receipt : [흐름 1] validate matched → 대화창 탐색 → pdf 생성 + 전송
+    check_and_send_receipt : [흐름 1] validate matched → 대화창 탐색
+                              - 있으면 pdf 생성 + 전송
+                              - 없으면 chat_check_result(chat_found=False) 응답
+                                → AgentHub가 OTP 발송
+                              - 오류 발생 시 Discord 에러 전송 후 종료 (OTP 미발송)
     rename_and_send_receipt: [흐름 2] verify 성공 → pdf 생성 → rename → dimmed → 전송
 """
 
@@ -91,6 +95,7 @@ async def dispatch(msg: dict[str, Any], ws: websockets.WebSocketClientProtocol) 
     elif action == 'check_and_send_receipt':
         sn           = msg.get('sn', '')
         patient_name = msg.get('patient_name', '')
+        phone        = msg.get('phone', '')
         date_from    = msg.get('date_from', '')
         date_to      = msg.get('date_to', '')
         log.info(f'[check_and_send_receipt] sn={sn}, name={patient_name}, {date_from}~{date_to}')
@@ -101,7 +106,16 @@ async def dispatch(msg: dict[str, Any], ws: websockets.WebSocketClientProtocol) 
                 chat_page = await find_chat_by_name(page, sn, patient_name)
 
                 if chat_page is None:
-                    log.info('[check_and_send_receipt] 대화창 없음 — verify 안내 필요')
+                    log.info('[check_and_send_receipt] 대화창 없음 — chat_check_result 전송 (OTP 발송 요청)')
+                    await ws.send(json.dumps({
+                        'type':         'chat_check_result',
+                        'chat_found':   False,
+                        'sn':           sn,
+                        'patient_name': patient_name,
+                        'phone':        phone,
+                        'date_from':    date_from,
+                        'date_to':      date_to,
+                    }))
                     return
 
                 pdf_path: Path = await generate_receipt_pdf(
@@ -113,6 +127,7 @@ async def dispatch(msg: dict[str, Any], ws: websockets.WebSocketClientProtocol) 
         except Exception as e:
             log.error(f'[check_and_send_receipt] 오류: {e}', exc_info=True)
             await send_error('handler.check_and_send_receipt', e)
+            # 오류 시 OTP 발송하지 않고 종료 (예: 카카오 토큰 만료 등 — OTP를 보내도 처리 불가)
 
     # ── rename_and_send_receipt (흐름 2) ─────────────────────────────────────
     elif action == 'rename_and_send_receipt':
