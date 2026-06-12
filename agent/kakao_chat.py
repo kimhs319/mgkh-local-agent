@@ -229,7 +229,7 @@ async def find_and_rename_chat(
 
     # dimmed_layer 닫기
     try:
-        await chat_page.locator('.dimmed_layer').click()
+        await chat_page.locator('.dimmed_layer').dispatch_event('click')
         log.info('[find_and_rename_chat] dimmed_layer 클릭 완료')
     except Exception as e:
         log.error(f'[find_and_rename_chat] dimmed_layer 클릭 실패: {e}')
