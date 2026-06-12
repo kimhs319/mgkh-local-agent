@@ -81,7 +81,7 @@ async def _get_with_retry(path: str) -> dict[str, Any]:
         if resp.status_code >= 500:
             body = resp.text
             log.error('[okchart] 서버 오류 %s %s — body: %s', resp.status_code, path, body)
-    
+            raise RuntimeError(f'okchart-api {resp.status_code} {path} — {body}')
         resp.raise_for_status()
         return resp.json()
 
