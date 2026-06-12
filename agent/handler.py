@@ -154,7 +154,6 @@ async def dispatch(msg: dict[str, Any], ws: websockets.WebSocketClientProtocol) 
                 chat_page = await find_and_rename_chat(
                     page, sender, code, sn, patient_name
                 )
-                await chat_page.locator('.dimmed_layer').click()
                 await send_pdf_via_kakao(chat_page, pdf_path)
                 log.info('[rename_and_send_receipt] 완료')
 

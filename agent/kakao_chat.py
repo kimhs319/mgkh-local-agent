@@ -162,7 +162,7 @@ async def find_and_rename_chat(
     sn: str,
     patient_name: str,
 ) -> Page:
-    """sender + code 로 대화창 탐색 → 팝업 오픈 → 채팅방 이름을 '{sn} {patient_name}' 으로 변경.
+    """sender + code 로 대화창 탐색 → 팝업 오픈 → 채팅방 이름을 '{sn} {patient_name}' 으로 변경 → dimmed_layer 닫기.
 
     Args:
         page:         open_kakao_page() 에서 반환된 채팅 목록 Page
@@ -172,7 +172,7 @@ async def find_and_rename_chat(
         patient_name: 환자 이름
 
     Returns:
-        이름 변경이 완료된 채팅 팝업 Page
+        이름 변경 및 dimmed_layer 해제가 완료된 채팅 팝업 Page
 
     Raises:
         RuntimeError: 대화창 탐색 실패
@@ -225,6 +225,15 @@ async def find_and_rename_chat(
     except Exception as e:
         log.error(f'[find_and_rename_chat] 이름 변경 실패: {e}')
         await send_error('kakao_chat.find_and_rename_chat_rename', e)
+        raise
+
+    # dimmed_layer 닫기
+    try:
+        await chat_page.locator('.dimmed_layer').click()
+        log.info('[find_and_rename_chat] dimmed_layer 클릭 완료')
+    except Exception as e:
+        log.error(f'[find_and_rename_chat] dimmed_layer 클릭 실패: {e}')
+        await send_error('kakao_chat.find_and_rename_chat_dimmed', e)
         raise
 
     return chat_page
