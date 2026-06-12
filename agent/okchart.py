@@ -49,9 +49,6 @@ async def _issue_token(client: httpx.AsyncClient) -> str:
         json={'password': OKCHART_PASSWORD},
         timeout=10,
     )
-    if resp.status_code >= 500:
-        body = resp.text
-        log.error('[okchart] 서버 오류 %s %s — body: %s', resp.status_code, path, body)
     resp.raise_for_status()
     token = resp.json()['token']
     _save_token(token)
@@ -80,6 +77,11 @@ async def _get_with_retry(path: str) -> dict[str, Any]:
                 headers={'Authorization': f'Bearer {token}'},
                 timeout=15,
             )
+
+        if resp.status_code >= 500:
+            body = resp.text
+            log.error('[okchart] 서버 오류 %s %s — body: %s', resp.status_code, path, body)
+    
         resp.raise_for_status()
         return resp.json()
 
