@@ -116,7 +116,7 @@ async def send_pdf_via_kakao(chat_page: Page, pdf_path: Path) -> None:
 # ── 흐름 1 전용 ───────────────────────────────────────────────────────────────
 
 async def find_chat_by_name(page: Page, sn: str, patient_name: str) -> Optional[Page]:
-    """채팅 목록에서 '{sn} {patient_name}' 으로 대화창을 탐색해 팝업을 반환.
+    """채팅 검색창에 '{sn} {patient_name}' 을 입력 후 결과에서 대화창을 탐색해 팝업을 반환.
 
     Args:
         page:         open_kakao_page() 에서 반환된 채팅 목록 Page
@@ -127,14 +127,22 @@ async def find_chat_by_name(page: Page, sn: str, patient_name: str) -> Optional[
         채팅 팝업 Page — 탐색 실패 시 None
     """
     name = _chat_name(sn, patient_name)
-    log.info(f'[find_chat_by_name] 탐색 중... name={name}')
+    log.info(f'[find_chat_by_name] 검색 중... name={name}')
 
+    # 검색창에 이름 입력 후 엔터
+    search_box = page.get_by_role('textbox', name='채팅방 이름 검색')
+    await search_box.fill(name)
+    await search_box.press('Enter')
+
+    # 검색 결과 li가 나타날 때까지 대기 (최대 5초) — 없으면 TimeoutError → count()=0
     locator = page.locator('li').filter(has_text=name)
-    count = await locator.count()
-
-    if count == 0:
+    try:
+        await locator.first.wait_for(state='visible', timeout=5000)
+    except Exception:
         log.info(f'[find_chat_by_name] 대화창 없음: {name}')
         return None
+
+    count = await locator.count()
     if count > 1:
         log.warning(f'[find_chat_by_name] {count}개 탐색됨, 첫 번째 사용')
 
