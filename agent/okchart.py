@@ -49,12 +49,14 @@ async def _issue_token(client: httpx.AsyncClient) -> str:
         json={'password': OKCHART_PASSWORD},
         timeout=10,
     )
+    if resp.status_code >= 500:
+        body = resp.text
+        log.error('[okchart] 서버 오류 %s %s — body: %s', resp.status_code, path, body)
     resp.raise_for_status()
     token = resp.json()['token']
     _save_token(token)
     log.info('[okchart] 토큰 재발급 완료')
     return token
-
 
 async def _get_with_retry(path: str) -> dict[str, Any]:
     """GET 요청. 토큰 없음 또는 401 시 토큰 재발급 후 1회 재시도."""
