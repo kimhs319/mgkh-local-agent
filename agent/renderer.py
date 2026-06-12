@@ -162,7 +162,7 @@ def _build_table(
                 style   = _align_style(cell.get("align"))
                 raw     = str(data.get(cell["dataKey"], ""))
                 suffix  = cell.get("suffix", "")
-                content = f"{raw} {suffix}" if suffix else raw
+                content = f"{raw}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{suffix}" if suffix else raw
 
             elif t == "data":
                 cls  = "c-value"
