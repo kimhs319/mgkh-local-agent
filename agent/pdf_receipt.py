@@ -61,7 +61,7 @@ def _make_resident_number(birth: str, sex: int) -> str:
 def _fmt(n) -> str:
     """숫자를 천 단위 콤마 형식으로 변환. 0이면 빈 문자열."""
     v = int(n or 0)
-    return f"{v:,}" if v else ""
+    return f"{v:,}"
 
 
 def _build_context(receipt_data: list[dict], demo: dict) -> dict:
