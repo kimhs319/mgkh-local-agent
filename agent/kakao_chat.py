@@ -86,21 +86,18 @@ async def send_pdf_via_kakao(chat_page: Page, pdf_path: Path) -> None:
     """
     log.info(f'[send_pdf] PDF 전송 시작: {pdf_path}')
     try:
-        # 파일 첨부 버튼 클릭
-        await (
-            chat_page
-            .get_by_role('button')
-            .filter(has_text=re.compile(r'^$'))
-            .nth(1)
-            .click()
-        )
-
-        # 파일 선택
+        # 파일 첨부 → 파일 선택창 동시 대기
         async with chat_page.expect_file_chooser() as fc_info:
-            pass
+            await (
+                chat_page
+                .get_by_role('button')
+                .filter(has_text=re.compile(r'^$'))
+                .nth(1)
+                .click()
+            )
         file_chooser = await fc_info.value
         await file_chooser.set_files(str(pdf_path))
-
+        
         log.info('[send_pdf] 파일 선택 완료')
 
         # 완료 메시지 전송
