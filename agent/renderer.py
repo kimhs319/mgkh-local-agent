@@ -186,7 +186,7 @@ def _build_table(
                     for val in row_vals:
                         opt   = next((o for o in options if o["value"] == val), None)
                         label = opt["label"] if opt else val
-                        check = "[&#9632;]" if facility_val == val else "[&nbsp;]"
+                        check = "[&#9675;]" if facility_val == val else "[&nbsp;&nbsp;]"
                         parts.append(f"{check} {label}")
                     lines.append(" &nbsp;&nbsp; ".join(parts))
                 content = "<br>".join(lines)
