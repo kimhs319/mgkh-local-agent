@@ -15,7 +15,7 @@ agent/pdf_receipt.py
 
 import logging
 import os
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 
 from playwright.async_api import async_playwright
@@ -160,7 +160,8 @@ async def generate(sn: str, date_from: str, date_to: str) -> Path:
 
     # ── 4. Playwright PDF 출력 ───────────────────────────────
     _OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    filename = f"receipt_{sn}_{date_from}_{date_to}.pdf"
+    now = datetime.now()
+    filename = f"진료비납입확인서_{ctx['patient_name']}_{now:%Y%m%d_%H%M%S}.pdf"
     out_path = _OUTPUT_DIR / filename
 
     async with async_playwright() as p:
