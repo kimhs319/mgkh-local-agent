@@ -19,9 +19,11 @@ from typing import Any
 
 import httpx
 
+from configs import config
+
 log = logging.getLogger(__name__)
 
-OKCHART_API_URL    = os.environ.get('OKCHART_API_URL', 'http://localhost:8000')
+OKCHART_API_URL    = config.OKCHART_API_URL
 OKCHART_PASSWORD   = os.environ['OKCHART_APP_PASSWORD']
 TOKEN_FILE         = Path(__file__).parent.parent / 'session' / 'okchart_token.json'
 

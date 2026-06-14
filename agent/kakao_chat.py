@@ -20,10 +20,11 @@ from typing import Optional
 from playwright.async_api import Page, async_playwright
 
 from agent.discord import send_error
+from configs import config
 
 log = logging.getLogger(__name__)
 
-SESSION_PATH = Path(os.environ.get('SESSION_PATH', 'output/session/kakao_state.json'))
+SESSION_PATH = Path(config.SESSION_PATH)
 TARGET_URL   = 'https://business.kakao.com/_gxjkUT/chats'
 USER_AGENT   = (
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
@@ -37,7 +38,7 @@ def _chat_name(sn: str, patient_name: str) -> str:
     return f'{sn} {patient_name}'
 
 
-# ── 공통 ─────────────────────────────────────────────────────────────────────
+# ── 공통 ─────────────────────────────────────────────────────────────────────────────
 
 async def open_kakao_page(p) -> Page:
     """Chromium 실행 → 카카오비즈니스 채팅 목록 페이지 진입.
@@ -59,7 +60,7 @@ async def open_kakao_page(p) -> Page:
     await page.goto(TARGET_URL)
     await page.wait_for_load_state('domcontentloaded')
 
-    # 계정 선택 버튼 (뜨는 경우만)
+    # 계정 선택 버튼 (뜻는 경우만)
     btn = page.get_by_role('button', name='mgkhclinic1@gmail.com 직원용')
     if await btn.count() > 0:
         log.info('계정 선택 버튼 감지, 클릭')
@@ -86,7 +87,7 @@ async def send_pdf_via_kakao(chat_page: Page, pdf_path: Path) -> None:
     """
     log.info(f'[send_pdf] PDF 전송 시작: {pdf_path}')
     try:
-        # 파일 첨부 → 파일 선택창 동시 대기
+        # 파일 체부 → 파일 선택창 동시 대기
         async with chat_page.expect_file_chooser() as fc_info:
             await (
                 chat_page
@@ -113,7 +114,7 @@ async def send_pdf_via_kakao(chat_page: Page, pdf_path: Path) -> None:
         raise
 
 
-# ── 흐름 1 전용 ───────────────────────────────────────────────────────────────
+# ── 흐름 1 전용 ───────────────────────────────────────────────────────────────────────
 
 async def find_chat_by_name(page: Page, sn: str, patient_name: str) -> Optional[Page]:
     """채팅 검색창에 '{sn} {patient_name}' 을 입력 후 결과에서 대화창을 탐색해 팝업을 반환.
@@ -161,7 +162,7 @@ async def find_chat_by_name(page: Page, sn: str, patient_name: str) -> Optional[
     return chat_page
 
 
-# ── 흐름 2 전용 ───────────────────────────────────────────────────────────────
+# ── 흐름 2 전용 ───────────────────────────────────────────────────────────────────────
 
 async def find_and_rename_chat(
     page: Page,

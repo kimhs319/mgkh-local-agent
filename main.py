@@ -22,6 +22,7 @@ import websockets  # noqa: E402
 
 from agent.discord import send_error  # noqa: E402
 from agent.handler import dispatch    # noqa: E402
+from configs import config            # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,
@@ -30,7 +31,7 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-AGENT_HUB_URL   = os.environ['AGENT_HUB_URL']
+AGENT_HUB_URL   = config.AGENT_HUB_URL
 AGENT_SECRET    = os.environ['AGENT_SECRET']
 
 RECONNECT_DELAY = 5   # 재접속 대기 시간(초)
